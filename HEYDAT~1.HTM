@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Heydate — Never miss a special date</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f7f7fb; --card:#ffffff; --ink:#16181d; --muted:#667085;
+    --accent:#f0512f; --accent2:#e83e8c;
+    --grad:linear-gradient(135deg,#f0512f 0%,#e83e8c 100%);
+    --accent-soft:#fff0ec; --green:#12996b; --green-soft:#e7f8f1;
+    --amber:#b45309; --amber-soft:#fff4d6; --line:#eaecf0;
+    --radius:18px;
+    --shadow:0 1px 3px rgba(16,24,40,.07),0 1px 2px rgba(16,24,40,.04);
+    --shadow-lg:0 16px 32px -12px rgba(16,24,40,.16);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:
+    radial-gradient(900px 400px at 85% -120px,rgba(232,62,140,.07),transparent 60%),
+    radial-gradient(900px 400px at 10% -120px,rgba(240,81,47,.08),transparent 60%),
+    var(--bg);
+    color:var(--ink);min-height:100vh;-webkit-font-smoothing:antialiased}
+  a{color:var(--accent)}
+
+  header{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.78);
+    backdrop-filter:blur(14px) saturate(1.6);-webkit-backdrop-filter:blur(14px) saturate(1.6);
+    border-bottom:1px solid rgba(234,236,240,.8)}
+  .header-inner{max-width:1020px;margin:0 auto;padding:13px 20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+  .logo{font-size:1.35rem;font-weight:900;letter-spacing:-.03em;
+    background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .logo span{color:var(--ink);-webkit-text-fill-color:var(--ink)}
+  nav{display:flex;gap:4px;margin-left:auto;background:#f1f1f6;border-radius:999px;padding:4px}
+  nav button{border:none;background:none;padding:8px 16px;border-radius:999px;font-size:.88rem;cursor:pointer;
+    color:var(--muted);font-weight:600;font-family:inherit;transition:all .2s ease;position:relative}
+  nav button:hover{color:var(--ink)}
+  nav button.active{background:#fff;color:var(--ink);box-shadow:var(--shadow);font-weight:700}
+  nav button .badge{background:var(--grad);color:#fff;border-radius:999px;padding:1px 7px;font-size:.7rem;margin-left:4px;font-weight:700}
+
+  main{max-width:1020px;margin:0 auto;padding:30px 20px 90px}
+  h2{font-size:1.45rem;font-weight:800;letter-spacing:-.02em;margin-bottom:4px}
+  .sub{color:var(--muted);font-size:.92rem;margin-bottom:22px;line-height:1.55}
+
+  @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+  section{animation:fadeUp .35s ease both}
+
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px;margin-bottom:14px;
+    box-shadow:var(--shadow);transition:transform .2s ease,box-shadow .2s ease;animation:fadeUp .4s ease both}
+  .card:hover{transform:translateY(-2px);box-shadow:var(--shadow-lg)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+
+  .btn{border:none;border-radius:12px;padding:11px 18px;font-weight:700;cursor:pointer;font-size:.9rem;
+    font-family:inherit;transition:all .18s ease}
+  .btn:active{transform:scale(.97)}
+  .btn-primary{background:var(--grad);color:#fff;box-shadow:0 6px 16px -6px rgba(240,81,47,.5)}
+  .btn-primary:hover{filter:brightness(1.07);box-shadow:0 10px 22px -6px rgba(240,81,47,.55)}
+  .btn-ghost{background:#fff;border:1px solid var(--line);color:var(--ink);box-shadow:var(--shadow)}
+  .btn-ghost:hover{border-color:#d5d9e2;background:#fafafc}
+  .btn-sm{padding:6px 12px;font-size:.8rem;border-radius:10px}
+  .btn-danger{background:#fff;border:1px solid #ffd9cf;color:#c2410c}
+  .btn-danger:hover{background:#fff5f2}
+
+  input,select,textarea{width:100%;padding:11px 14px;border:1.5px solid var(--line);border-radius:12px;font-size:.92rem;
+    background:#fcfcfd;font-family:inherit;transition:border .15s ease,box-shadow .15s ease}
+  input:focus,select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 4px rgba(240,81,47,.12)}
+  label{font-size:.78rem;font-weight:700;color:var(--muted);display:block;margin:14px 0 6px;text-transform:uppercase;letter-spacing:.04em}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media(max-width:560px){.row{grid-template-columns:1fr}}
+
+  .pill{display:inline-flex;align-items:center;background:var(--accent-soft);color:var(--accent);border-radius:999px;
+    padding:4px 12px;font-size:.78rem;font-weight:700;margin:2px 4px 2px 0}
+  .pill.gray{background:#f1f1f6;color:var(--muted)}
+  .tag-x{cursor:pointer;margin-left:6px;font-weight:900;opacity:.7}
+  .tag-x:hover{opacity:1}
+
+  .occasion-card{display:flex;align-items:center;gap:16px;padding:16px 18px}
+  .day-circle{min-width:62px;height:62px;border-radius:50%;display:flex;flex-direction:column;align-items:center;
+    justify-content:center;font-weight:800;background:#f1f1f6;color:var(--muted);flex-shrink:0}
+  .day-circle.soon{background:var(--amber-soft);color:var(--amber)}
+  .day-circle.now{background:var(--grad);color:#fff;box-shadow:0 8px 18px -6px rgba(240,81,47,.55)}
+  .day-circle small{font-size:.6rem;font-weight:600}
+  .day-circle b{font-size:1.15rem;letter-spacing:-.02em}
+  .occ-info{flex:1;min-width:0}
+  .occ-info .who{font-weight:800;font-size:1rem}
+  .occ-info .what{color:var(--muted);font-size:.85rem;margin-top:2px}
+  .occ-emoji{font-size:1.1rem;margin-right:4px}
+
+  .alert{border-radius:var(--radius);padding:14px 18px;margin-bottom:14px;font-size:.9rem;display:flex;gap:10px;
+    align-items:flex-start;box-shadow:var(--shadow);animation:fadeUp .4s ease both;line-height:1.5}
+  .alert.warn{background:var(--amber-soft);border:1px solid #fde28a}
+  .alert.good{background:var(--green-soft);border:1px solid #b8e8d4}
+
+  .msg-card{border-left:4px solid var(--green)}
+  .msg-meta{font-size:.74rem;color:var(--muted);margin-bottom:8px;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+  .msg-body{background:#f8f8fb;border-radius:12px;padding:13px 15px;font-size:.9rem;white-space:pre-wrap;line-height:1.55}
+
+  .empty{text-align:center;padding:54px 20px;color:var(--muted)}
+  .empty .big{font-size:2.6rem;margin-bottom:10px}
+  .empty:hover{transform:none}
+
+  .person-head{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+  .avatar{width:44px;height:44px;border-radius:50%;background:var(--grad);color:#fff;display:flex;align-items:center;
+    justify-content:center;font-weight:800;font-size:1.05rem;flex-shrink:0;box-shadow:0 6px 14px -5px rgba(240,81,47,.5)}
+  .person-name{font-weight:800;font-size:1.05rem;letter-spacing:-.01em}
+  .person-rel{color:var(--muted);font-size:.83rem}
+  .section-label{font-size:.7rem;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:#98a2b3;margin:16px 0 6px}
+  .date-line{display:flex;justify-content:space-between;align-items:center;font-size:.88rem;padding:7px 0;border-bottom:1px dashed var(--line)}
+  .date-line:last-child{border-bottom:none}
+
+  .modal-bg{position:fixed;inset:0;background:rgba(16,18,24,.45);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
+    display:none;align-items:flex-start;justify-content:center;z-index:100;padding:34px 16px;overflow-y:auto}
+  .modal-bg.open{display:flex}
+  @keyframes pop{from{opacity:0;transform:translateY(16px) scale(.98)}to{opacity:1;transform:none}}
+  .modal{background:var(--card);border-radius:22px;max-width:580px;width:100%;padding:28px;box-shadow:var(--shadow-lg);animation:pop .28s cubic-bezier(.2,.9,.3,1.2) both}
+  .modal h3{font-size:1.2rem;font-weight:800;letter-spacing:-.01em;margin-bottom:2px}
+
+  .gift-item{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;border-bottom:1px dashed var(--line);font-size:.9rem}
+  .gift-item:last-child{border-bottom:none}
+  .gift-price{color:var(--green);font-weight:700;white-space:nowrap}
+  .gift-right{display:flex;align-items:center;gap:10px;white-space:nowrap}
+  .shop-link{display:inline-block;background:var(--accent-soft);color:var(--accent);text-decoration:none;font-weight:700;
+    font-size:.76rem;padding:5px 12px;border-radius:999px;transition:all .15s ease}
+  .shop-link:hover{background:var(--grad);color:#fff}
+  .hobby-group{margin-bottom:16px}
+  .hobby-group h4{font-size:.95rem;color:var(--accent);margin-bottom:4px;font-weight:800}
+  .gift-item.bought{opacity:.55}
+  .gift-item.bought .gift-name{text-decoration:line-through}
+  .undo-link{color:var(--muted);font-size:.76rem;cursor:pointer;font-weight:700;text-decoration:underline}
+  .undo-link:hover{color:var(--ink)}
+  .got-btn{background:var(--green-soft);color:var(--green);border:none;border-radius:999px;padding:5px 12px;
+    font-size:.76rem;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s ease;white-space:nowrap}
+  .got-btn:hover{background:var(--green);color:#fff}
+  .buy-prompt{position:fixed;bottom:26px;left:50%;transform:translateX(-50%);background:var(--card);border:1px solid var(--line);
+    border-radius:16px;padding:14px 18px;box-shadow:var(--shadow-lg);z-index:210;display:none;max-width:440px;width:calc(100% - 32px);font-size:.9rem;line-height:1.5}
+  .buy-prompt.show{display:block;animation:pop .28s cubic-bezier(.2,.9,.3,1.2) both}
+
+  .deal-card{border-left:4px solid var(--accent)}
+  .deal-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap}
+  .deal-item{font-weight:800;font-size:1.02rem;letter-spacing:-.01em}
+  .deal-for{color:var(--muted);font-size:.84rem;margin-top:3px}
+  .deal-prices{display:flex;align-items:baseline;gap:10px;margin-top:10px}
+  .price-old{color:#98a2b3;text-decoration:line-through;font-size:.92rem}
+  .price-new{color:var(--green);font-weight:800;font-size:1.3rem;letter-spacing:-.02em}
+  .pct-off{background:var(--green-soft);color:var(--green);border-radius:999px;padding:3px 12px;font-size:.78rem;font-weight:800}
+  .deal-notify{background:#f8f8fb;border-radius:12px;padding:11px 14px;font-size:.85rem;margin-top:12px;color:var(--muted);line-height:1.5}
+
+  .added-dates div{font-size:.86rem;padding:7px 12px;background:#f6f6fa;border-radius:10px;margin:5px 0;display:flex;justify-content:space-between}
+  .footer-note{text-align:center;color:#98a2b3;font-size:.78rem;margin-top:36px}
+
+  .toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(8px);background:var(--ink);color:#fff;
+    padding:12px 22px;border-radius:999px;font-size:.88rem;opacity:0;transition:all .3s ease;pointer-events:none;z-index:200;box-shadow:var(--shadow-lg)}
+  .toast.show{opacity:1;transform:translateX(-50%)}
+
+  .page-head{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:18px;flex-wrap:wrap;gap:12px}
+  .page-head .sub{margin:0}
+
+  @media(max-width:640px){
+    .header-inner{padding:11px 14px}
+    nav{margin-left:0;width:100%;justify-content:space-between;overflow-x:auto}
+    nav button{padding:8px 12px;font-size:.82rem;white-space:nowrap}
+    main{padding:22px 14px 80px}
+    h2{font-size:1.25rem}
+    .occasion-card{flex-wrap:wrap}
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="header-inner">
+    <div class="logo">hey<span>date</span> 🎁</div>
+    <nav>
+      <button id="nav-dashboard" class="active" onclick="go('dashboard')">Upcoming</button>
+      <button id="nav-people" onclick="go('people')">People</button>
+      <button id="nav-deals" onclick="go('deals')">Deals <span class="badge" id="dealBadge" style="display:none"></span></button>
+      <button id="nav-reminders" onclick="go('reminders')">Reminders <span class="badge" id="remBadge" style="display:none"></span></button>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <!-- DASHBOARD -->
+  <section id="view-dashboard">
+    <div class="page-head">
+      <div>
+        <h2>Upcoming special dates</h2>
+        <p class="sub">Reminders go out by text or email 2 weeks ahead — automatically.</p>
+      </div>
+      <button class="btn btn-primary" onclick="go('people');openPersonModal()">+ Add person</button>
+    </div>
+    <div id="dashAlert"></div>
+    <div id="dashList"></div>
+  </section>
+
+  <!-- PEOPLE -->
+  <section id="view-people" style="display:none">
+    <div class="page-head">
+      <div>
+        <h2>People</h2>
+        <p class="sub">Their dates, hobbies, and gift ideas — all in one place.</p>
+      </div>
+      <button class="btn btn-primary" onclick="openPersonModal()">+ Add person</button>
+    </div>
+    <div class="grid" id="peopleList"></div>
+  </section>
+
+  <!-- DEALS -->
+  <section id="view-deals" style="display:none">
+    <h2>Deal watch 💰</h2>
+    <p class="sub">We watch prices on items matching your people's hobbies and notify you when something drops. Prototype mode: prices are simulated — production uses the Amazon Product Advertising API / Keepa price history.</p>
+    <div id="dealsList"></div>
+  </section>
+
+  <!-- REMINDERS -->
+  <section id="view-reminders" style="display:none">
+    <h2>Reminder outbox</h2>
+    <p class="sub">Prototype mode: these are the messages that would be sent automatically. In production this runs on a server with Twilio (SMS) and SendGrid (email).</p>
+    <div id="remindersList"></div>
+  </section>
+
+  <p class="footer-note">heydate prototype · data is saved in this browser</p>
+</main>
+
+<!-- ADD/EDIT PERSON MODAL -->
+<div class="modal-bg" id="personModal">
+  <div class="modal">
+    <h3 id="pmTitle">Add person</h3>
+    <p class="sub">Who do you want to remember?</p>
+    <div class="row">
+      <div><label>Name *</label><input id="pName" placeholder="e.g. Mom"></div>
+      <div><label>Relationship</label><input id="pRel" placeholder="e.g. Mother, Friend"></div>
+    </div>
+    <label>How should we remind you?</label>
+    <div class="row">
+      <select id="pChannel">
+        <option value="text">Text message</option>
+        <option value="email">Email</option>
+        <option value="both">Text + Email</option>
+      </select>
+      <input id="pContact" placeholder="Your phone or email">
+    </div>
+
+    <label>Special dates</label>
+    <div class="row" style="grid-template-columns:1.2fr 1fr auto">
+      <select id="dType">
+        <option>Birthday</option><option>Anniversary</option><option>Graduation</option>
+        <option>Mother's Day gift</option><option>Father's Day gift</option><option>Other</option>
+      </select>
+      <input type="date" id="dDate">
+      <button class="btn btn-ghost btn-sm" onclick="addDateToDraft()" style="align-self:stretch">Add</button>
+    </div>
+    <div class="added-dates" id="draftDates"></div>
+
+    <label>Hobbies & interests (press Enter to add)</label>
+    <input id="pHobbyInput" placeholder="e.g. golf, cooking, gaming…" onkeydown="if(event.key==='Enter'){event.preventDefault();addHobbyToDraft()}">
+    <div id="draftHobbies" style="margin-top:8px"></div>
+
+    <div style="display:flex;gap:10px;margin-top:22px;justify-content:flex-end">
+      <button class="btn btn-ghost" onclick="closePersonModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="savePerson()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- GIFT IDEAS MODAL -->
+<div class="modal-bg" id="giftModal">
+  <div class="modal">
+    <h3 id="gmTitle">Gift ideas</h3>
+    <p class="sub" id="gmSub"></p>
+    <div id="giftContent"></div>
+    <div style="display:flex;justify-content:flex-end;margin-top:16px">
+      <button class="btn btn-ghost" onclick="document.getElementById('giftModal').classList.remove('open')">Close</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<div class="buy-prompt" id="buyPrompt"></div>
+
+<script>
+/* ---------------- Gift catalog ---------------- */
+const CATALOG = {
+  golf:{label:"Golf",aliases:["golfing"],items:[["Premium golf balls (dozen)","$25–45"],["Rangefinder","$80–150"],["Golf glove + tees set","$20–35"],["Putting mat for home practice","$40–90"],["Golf club head covers","$25–50"],["Round at a nice course (gift card)","$50–150"]]},
+  cooking:{label:"Cooking",aliases:["chef","culinary"],items:[["High-quality chef's knife","$50–150"],["Cast iron skillet","$30–60"],["Spice collection / gourmet salt set","$25–50"],["Cooking class (local or online)","$40–120"],["Recipe book from a favorite cuisine","$20–35"],["Digital instant-read thermometer","$25–40"]]},
+  baking:{label:"Baking",aliases:["pastry","bread making"],items:[["Stand mixer attachments","$30–80"],["Banneton bread proofing set","$25–40"],["Silicone baking mat set","$15–30"],["Specialty cake pans","$20–45"],["Artisan vanilla & extracts set","$25–50"]]},
+  gaming:{label:"Gaming",aliases:["video games","gamer","videogames"],items:[["Gaming headset","$50–150"],["Controller charging dock","$25–40"],["Gift card for their platform (Steam/PSN/Xbox)","$25–100"],["Ergonomic gaming mouse","$40–100"],["LED desk light strip","$20–40"],["Collectible from their favorite game","$20–60"]]},
+  reading:{label:"Reading",aliases:["books","book lover","literature"],items:[["E-reader (Kindle/Kobo)","$100–250"],["Book subscription box (3 months)","$50–90"],["Reading lamp with adjustable warmth","$25–50"],["Bookstore gift card","$25–75"],["Personalized embosser or bookplates","$20–40"],["Cozy reading blanket","$30–60"]]},
+  fishing:{label:"Fishing",aliases:["angling","fly fishing"],items:[["Tackle box organizer","$25–60"],["Quality fishing pliers + line cutter","$25–45"],["Polarized fishing sunglasses","$30–100"],["Portable rod holder","$20–40"],["Fishing trip / charter gift card","$75–250"]]},
+  gardening:{label:"Gardening",aliases:["plants","garden","houseplants"],items:[["Ergonomic pruning shears","$25–50"],["Heirloom seed collection","$20–40"],["Garden kneeler & tool seat","$35–60"],["Indoor herb growing kit","$30–60"],["Personalized garden marker set","$15–30"],["Nice planters / self-watering pots","$25–70"]]},
+  fitness:{label:"Fitness",aliases:["gym","working out","weightlifting","exercise","crossfit"],items:[["Massage gun","$60–150"],["Quality gym bag","$40–80"],["Adjustable dumbbells","$100–300"],["Wireless workout earbuds","$50–150"],["Foam roller + mobility kit","$30–60"],["Protein/snack sampler box","$25–50"]]},
+  yoga:{label:"Yoga",aliases:["pilates","meditation"],items:[["Premium yoga mat","$50–120"],["Cork blocks + strap set","$25–45"],["Yoga class pack at a local studio","$50–120"],["Meditation cushion","$30–60"],["Calming essential-oil set","$20–40"]]},
+  hiking:{label:"Hiking & Camping",aliases:["camping","outdoors","backpacking","trekking"],items:[["Insulated water bottle","$25–45"],["Headlamp (rechargeable)","$25–50"],["Trail snacks gift box","$25–45"],["Hiking socks (merino, 3-pack)","$30–50"],["Compact hammock","$30–70"],["National park annual pass","$80"]]},
+  photography:{label:"Photography",aliases:["photos","camera"],items:[["Camera strap (leather)","$30–70"],["Lens cleaning kit","$15–25"],["Mini tripod / flexible tripod","$25–60"],["Photo printing subscription","$30–60"],["Camera bag insert","$25–50"],["Photography workshop","$50–200"]]},
+  art:{label:"Art & Painting",aliases:["painting","drawing","sketching","crafts","artist"],items:[["Professional watercolor or acrylic set","$30–80"],["Quality sketchbook + fineliners","$25–45"],["Tabletop easel","$25–60"],["Art class or paint night","$30–80"],["Custom brush set","$25–60"]]},
+  music:{label:"Music",aliases:["guitar","piano","musician","vinyl","records"],items:[["Vinyl record of a favorite album","$25–45"],["Concert tickets","$50–200"],["Quality headphones","$60–250"],["Instrument accessories (strings, picks, stand)","$15–50"],["Music streaming gift card","$30–60"],["Bluetooth speaker","$40–120"]]},
+  coffee:{label:"Coffee",aliases:["espresso","caffeine"],items:[["Pour-over kit (dripper + kettle)","$40–90"],["Specialty coffee subscription (3 months)","$45–75"],["Burr grinder","$40–120"],["Insulated travel mug","$25–40"],["Local roaster sampler box","$25–50"]]},
+  tea:{label:"Tea",aliases:[],items:[["Loose-leaf tea sampler","$25–45"],["Cast iron or glass teapot","$30–60"],["Electric kettle with temp control","$50–90"],["Matcha starter kit","$30–60"],["Tea subscription box","$40–70"]]},
+  wine:{label:"Wine",aliases:["whiskey","spirits","cocktails","beer"],items:[["Wine aerator + decanter","$30–70"],["Tasting flight set / glassware","$30–80"],["Wine club subscription (3 months)","$60–150"],["Cocktail kit (shaker, jigger, bitters)","$40–80"],["Local tasting tour for two","$60–150"]]},
+  cycling:{label:"Cycling",aliases:["biking","mountain biking","bike"],items:[["Bike multi-tool + repair kit","$25–50"],["Rechargeable bike lights","$25–60"],["Cycling gloves","$20–40"],["Handlebar phone mount","$20–40"],["Padded cycling jersey or bibs","$50–120"]]},
+  running:{label:"Running",aliases:["marathon","jogging"],items:[["Running belt or hydration vest","$25–80"],["Anti-blister running socks (3-pack)","$30–45"],["GPS watch","$150–400"],["Race entry (5K/10K) gift","$30–80"],["Reflective running gear","$20–50"]]},
+  knitting:{label:"Knitting & Crochet",aliases:["crochet","sewing","quilting","crafting"],items:[["Luxury yarn bundle (merino/alpaca)","$30–70"],["Interchangeable needle set","$40–90"],["Project bag","$20–40"],["Pattern book","$15–30"],["Yarn store gift card","$25–60"]]},
+  woodworking:{label:"Woodworking & DIY",aliases:["diy","tools","carpentry"],items:[["Quality measuring/marking set","$30–60"],["Japanese pull saw","$30–60"],["Workshop apron","$30–60"],["Sandpaper + finishing kit","$20–40"],["Hardwood project boards","$25–60"]]},
+  travel:{label:"Travel",aliases:["traveling","vacations"],items:[["Packing cubes set","$20–40"],["Universal travel adapter","$20–35"],["Scratch-off world map","$20–35"],["Compression travel pillow","$25–45"],["Airline/hotel gift card","$50–200"],["Travel journal","$15–30"]]},
+  boardgames:{label:"Board Games",aliases:["board games","puzzles","chess","tabletop"],items:[["A top-rated strategy game (Wingspan, Azul, Catan)","$30–60"],["1000-piece premium puzzle","$20–35"],["Card game collection","$15–30"],["Game night snack basket","$25–50"],["Nice chess set","$40–120"]]},
+  dogs:{label:"Dogs",aliases:["dog","pets","puppy"],items:[["Custom pet portrait","$30–80"],["Dog treat subscription box","$30–50"],["Personalized collar + tag","$20–45"],["Interactive puzzle feeder","$20–40"],["Matching owner+dog accessories","$25–50"]]},
+  cats:{label:"Cats",aliases:["cat","kitten"],items:[["Cat tree or window perch","$40–120"],["Automatic laser toy","$20–40"],["Custom cat portrait","$30–80"],["Catnip toy bundle","$15–30"],["Heated cat bed","$30–60"]]},
+  tech:{label:"Tech & Gadgets",aliases:["technology","gadgets","electronics","computers","coding","programming"],items:[["Wireless charging station","$30–60"],["Smart speaker or display","$50–120"],["Mechanical keyboard","$60–150"],["E-ink smart notebook","$25–60"],["Bluetooth tracker set (AirTag/Tile)","$25–80"],["Desk cable organizer kit","$15–30"]]},
+  sports:{label:"Sports Fan",aliases:["football","basketball","soccer","baseball","hockey"],items:[["Team jersey or hat","$30–120"],["Tickets to a game","$50–250"],["Team blanket or mug","$20–40"],["Sports documentary/streaming gift card","$25–60"],["Framed team print","$30–70"]]},
+  beauty:{label:"Beauty & Self-care",aliases:["skincare","makeup","spa","self-care"],items:[["Skincare gift set","$30–80"],["Spa day gift card","$60–200"],["Silk pillowcase","$25–50"],["Jade roller + gua sha set","$15–30"],["Luxury candle","$25–60"]]},
+  cars:{label:"Cars",aliases:["automotive","car","motorcycles"],items:[["Detailing kit","$30–70"],["Track day experience","$100–300"],["Portable jump starter","$50–100"],["Model car of their dream ride","$25–80"],["Dash cam","$50–150"]]}
+};
+
+function findHobbyKey(input){
+  const q = input.trim().toLowerCase();
+  if(!q) return null;
+  for(const [key,h] of Object.entries(CATALOG)){
+    if(key===q || h.label.toLowerCase()===q) return key;
+    if(h.aliases.some(a=>a===q)) return key;
+  }
+  for(const [key,h] of Object.entries(CATALOG)){
+    if(key.includes(q)||q.includes(key)) return key;
+    if(h.aliases.some(a=>a.includes(q)||q.includes(a))) return key;
+  }
+  return null;
+}
+
+/* ---------------- State ---------------- */
+const REMIND_DAYS = 14;
+let people = [];
+let dismissed = {}; // reminderId -> true
+try{
+  people = JSON.parse(localStorage.getItem('heydate_people')||'null') || seed();
+  dismissed = JSON.parse(localStorage.getItem('heydate_dismissed')||'{}');
+}catch(e){ people = seed(); }
+
+function seed(){
+  const yr = new Date().getFullYear();
+  const soon = new Date(); soon.setDate(soon.getDate()+10);
+  const later = new Date(); later.setDate(later.getDate()+40);
+  const fmt = d=>d.toISOString().slice(0,10);
+  return [
+    {id:1,name:"Mom",rel:"Mother",channel:"text",contact:"(555) 010-1234",
+     dates:[{type:"Birthday",date:fmt(soon)}],hobbies:["gardening","reading","tea"]},
+    {id:2,name:"Jordan",rel:"Partner",channel:"both",contact:"you@example.com",
+     dates:[{type:"Anniversary",date:fmt(later)},{type:"Birthday",date:`${yr}-12-03`}],hobbies:["gaming","hiking","coffee"]}
+  ];
+}
+function save(){
+  try{
+    localStorage.setItem('heydate_people',JSON.stringify(people));
+    localStorage.setItem('heydate_dismissed',JSON.stringify(dismissed));
+  }catch(e){}
+}
+
+/* ---------------- Date helpers ---------------- */
+function nextOccurrence(dateStr){
+  const today = new Date(); today.setHours(0,0,0,0);
+  const [y,m,d] = dateStr.split('-').map(Number);
+  let next = new Date(today.getFullYear(), m-1, d);
+  if(next < today) next = new Date(today.getFullYear()+1, m-1, d);
+  return next;
+}
+function daysUntil(dateStr){
+  const today = new Date(); today.setHours(0,0,0,0);
+  return Math.round((nextOccurrence(dateStr) - today)/86400000);
+}
+function prettyDate(d){
+  return d.toLocaleDateString(undefined,{weekday:'short',month:'long',day:'numeric'});
+}
+function yearsCount(dateStr){
+  const orig = parseInt(dateStr.slice(0,4),10);
+  const next = nextOccurrence(dateStr).getFullYear();
+  const n = next - orig;
+  return n>0 && orig>1930 ? n : null;
+}
+function occIcon(type){
+  return {Birthday:'🎂',Anniversary:'💍',Graduation:'🎓',"Mother's Day gift":'💐',"Father's Day gift":'👔'}[type]||'⭐';
+}
+
+/* ---------------- Occasions & reminders ---------------- */
+function allOccasions(){
+  const list=[];
+  for(const p of people){
+    for(const d of p.dates){
+      list.push({person:p, type:d.type, dateStr:d.date, next:nextOccurrence(d.date), days:daysUntil(d.date)});
+    }
+  }
+  return list.sort((a,b)=>a.days-b.days);
+}
+function activeReminders(){
+  return allOccasions().filter(o=>o.days<=REMIND_DAYS);
+}
+function reminderId(o){ return `${o.person.id}|${o.type}|${o.next.toISOString().slice(0,10)}`; }
+
+function reminderMessage(o){
+  const years = yearsCount(o.dateStr);
+  const giftHint = o.person.hobbies.length
+    ? ` They're into ${o.person.hobbies.map(h=>CATALOG[h]?CATALOG[h].label.toLowerCase():h).join(', ')} — open heydate for gift ideas.`
+    : '';
+  const what = o.type==='Birthday'
+    ? `${o.person.name}'s birthday${years?` (turning ${years})`:''}`
+    : o.type==='Anniversary'
+      ? `your anniversary with ${o.person.name}${years?` (${years} years!)`:''}`
+      : `${o.person.name}'s ${o.type.toLowerCase()}`;
+  return `Heads up! ${what} is ${o.days===0?'TODAY':`in ${o.days} day${o.days===1?'':'s'}`} — ${prettyDate(o.next)}.${giftHint}`;
+}
+
+/* ---------------- Rendering ---------------- */
+function go(view){
+  for(const v of ['dashboard','people','deals','reminders']){
+    document.getElementById('view-'+v).style.display = v===view?'':'none';
+    document.getElementById('nav-'+v).classList.toggle('active', v===view);
+  }
+  render();
+}
+
+function render(){
+  renderDashboard(); renderPeople(); renderReminders(); renderDeals();
+  const n = activeReminders().filter(o=>!dismissed[reminderId(o)]).length;
+  const badge = document.getElementById('remBadge');
+  badge.style.display = n? 'inline-block':'none';
+  badge.textContent = n;
+  const nd = todaysDeals().filter(d=>!dismissedDeals[d.id]).length;
+  const db = document.getElementById('dealBadge');
+  db.style.display = nd? 'inline-block':'none';
+  db.textContent = nd;
+}
+
+function renderDashboard(){
+  const occ = allOccasions();
+  const el = document.getElementById('dashList');
+  const alertEl = document.getElementById('dashAlert');
+  const due = activeReminders();
+  const newDeals = todaysDeals().filter(d=>!dismissedDeals[d.id]).length;
+  alertEl.innerHTML = (due.length
+    ? `<div class="alert warn"><span>🔔</span><span><b>${due.length} occasion${due.length>1?'s':''}</b> within the next ${REMIND_DAYS} days — reminders are queued in the <a href="#" onclick="go('reminders');return false">outbox</a>.</span></div>`
+    : '') + (newDeals
+    ? `<div class="alert good"><span>💰</span><span><b>${newDeals} item${newDeals>1?'s':''}</b> matching your people's hobbies ${newDeals>1?'are':'is'} on sale today — see <a href="#" onclick="go('deals');return false">Deals</a>.</span></div>`
+    : '');
+  if(!occ.length){
+    el.innerHTML = `<div class="card empty"><div class="big">🗓️</div>No dates yet.<br><br><button class="btn btn-primary" onclick="go('people');openPersonModal()">Add your first person</button></div>`;
+    return;
+  }
+  el.innerHTML = occ.map((o,i)=>{
+    const cls = o.days<=3?'now':o.days<=REMIND_DAYS?'soon':'';
+    const years = yearsCount(o.dateStr);
+    return `<div class="card occasion-card" style="animation-delay:${Math.min(i*60,360)}ms">
+      <div class="day-circle ${cls}"><b>${o.days}</b><small>day${o.days===1?'':'s'}</small></div>
+      <div class="occ-info">
+        <div class="who"><span class="occ-emoji">${occIcon(o.type)}</span>${esc(o.person.name)} — ${esc(o.type)}${years?` <span class="pill gray">${years} yrs</span>`:''}</div>
+        <div class="what">${prettyDate(o.next)} · remind via ${channelLabel(o.person.channel)}</div>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="openGifts(${o.person.id})">🎁 Gift ideas</button>
+    </div>`;
+  }).join('');
+}
+
+function channelLabel(c){ return c==='both'?'text + email':c==='text'?'text':'email'; }
+
+function renderPeople(){
+  const el = document.getElementById('peopleList');
+  if(!people.length){
+    el.innerHTML = `<div class="card empty" style="grid-column:1/-1"><div class="big">👋</div>No people yet — add someone you never want to forget.</div>`;
+    return;
+  }
+  el.innerHTML = people.map((p,i)=>`
+    <div class="card" style="animation-delay:${Math.min(i*60,360)}ms">
+      <div class="person-head">
+        <div style="display:flex;gap:12px;align-items:center">
+          <div class="avatar">${esc((p.name||'?')[0].toUpperCase())}</div>
+          <div>
+            <div class="person-name">${esc(p.name)}</div>
+            <div class="person-rel">${esc(p.rel||'')}${p.rel?' · ':''}${channelLabel(p.channel)}</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-ghost btn-sm" onclick="openPersonModal(${p.id})">Edit</button>
+          <button class="btn btn-danger btn-sm" onclick="removePerson(${p.id})">✕</button>
+        </div>
+      </div>
+      <div class="section-label">Dates</div>
+      ${p.dates.length? p.dates.map(d=>`<div class="date-line"><span>${occIcon(d.type)} ${esc(d.type)}</span><span>${prettyDate(nextOccurrence(d.date))} <span class="pill gray">${daysUntil(d.date)}d</span></span></div>`).join('') : '<span class="sub">none</span>'}
+      <div class="section-label">Hobbies</div>
+      ${p.hobbies.length? p.hobbies.map(h=>`<span class="pill">${esc(CATALOG[h]?CATALOG[h].label:h)}</span>`).join('') : '<span class="sub">none</span>'}
+      <div style="margin-top:16px"><button class="btn btn-primary btn-sm" onclick="openGifts(${p.id})">🎁 Gift ideas</button></div>
+    </div>`).join('');
+}
+
+function renderReminders(){
+  const el = document.getElementById('remindersList');
+  const due = activeReminders();
+  if(!due.length){
+    el.innerHTML = `<div class="card empty"><div class="big">📭</div>Nothing in the outbox — no dates within ${REMIND_DAYS} days.</div>`;
+    return;
+  }
+  el.innerHTML = due.map((o,i)=>{
+    const id = reminderId(o);
+    const sent = dismissed[id];
+    return `<div class="card msg-card" style="animation-delay:${Math.min(i*60,360)}ms;${sent?'opacity:.55':''}">
+      <div class="msg-meta">${o.person.channel==='email'?'📧 Email':o.person.channel==='both'?'📱📧 Text + Email':'📱 Text'} → ${esc(o.person.contact||'your contact')} ${sent?'· ✅ sent':'· scheduled'}</div>
+      <div class="msg-body">${esc(reminderMessage(o))}</div>
+      ${sent?'':`<div style="margin-top:12px;display:flex;gap:8px">
+        <button class="btn btn-primary btn-sm" onclick="markSent('${id}')">Simulate send</button>
+        <button class="btn btn-ghost btn-sm" onclick="openGifts(${o.person.id})">🎁 Gift ideas</button>
+      </div>`}
+    </div>`;
+  }).join('');
+}
+
+/* ---------------- Person modal ---------------- */
+let draft = null;
+function openPersonModal(id){
+  const p = id ? people.find(x=>x.id===id) : null;
+  draft = p ? JSON.parse(JSON.stringify(p)) : {id:null,name:'',rel:'',channel:'text',contact:'',dates:[],hobbies:[]};
+  document.getElementById('pmTitle').textContent = p?'Edit person':'Add person';
+  document.getElementById('pName').value = draft.name;
+  document.getElementById('pRel').value = draft.rel;
+  document.getElementById('pChannel').value = draft.channel;
+  document.getElementById('pContact').value = draft.contact;
+  document.getElementById('pHobbyInput').value='';
+  document.getElementById('dDate').value='';
+  renderDraft();
+  document.getElementById('personModal').classList.add('open');
+}
+function closePersonModal(){ document.getElementById('personModal').classList.remove('open'); }
+
+function addDateToDraft(){
+  const type = document.getElementById('dType').value;
+  const date = document.getElementById('dDate').value;
+  if(!date){ toast('Pick a date first'); return; }
+  draft.dates.push({type,date});
+  document.getElementById('dDate').value='';
+  renderDraft();
+}
+function addHobbyToDraft(){
+  const input = document.getElementById('pHobbyInput');
+  const raw = input.value.trim();
+  if(!raw) return;
+  const key = findHobbyKey(raw);
+  const val = key || raw.toLowerCase();
+  if(!draft.hobbies.includes(val)) draft.hobbies.push(val);
+  if(!key) toast(`"${raw}" added — no catalog match yet, we'll suggest shop searches`);
+  input.value='';
+  renderDraft();
+}
+function renderDraft(){
+  document.getElementById('draftDates').innerHTML = draft.dates.map((d,i)=>
+    `<div><span>${occIcon(d.type)} ${esc(d.type)} · ${d.date}</span><span class="tag-x" onclick="draft.dates.splice(${i},1);renderDraft()">✕</span></div>`).join('');
+  document.getElementById('draftHobbies').innerHTML = draft.hobbies.map((h,i)=>
+    `<span class="pill">${esc(CATALOG[h]?CATALOG[h].label:h)}<span class="tag-x" onclick="draft.hobbies.splice(${i},1);renderDraft()">✕</span></span>`).join('');
+}
+function savePerson(){
+  draft.name = document.getElementById('pName').value.trim();
+  draft.rel = document.getElementById('pRel').value.trim();
+  draft.channel = document.getElementById('pChannel').value;
+  draft.contact = document.getElementById('pContact').value.trim();
+  if(!draft.name){ toast('Name is required'); return; }
+  if(draft.id){
+    const i = people.findIndex(x=>x.id===draft.id);
+    people[i] = draft;
+  } else {
+    draft.id = Date.now();
+    people.push(draft);
+  }
+  save(); closePersonModal(); render();
+  toast('Saved ✓');
+}
+function removePerson(id){
+  const p = people.find(x=>x.id===id);
+  if(!confirm(`Remove ${p.name}?`)) return;
+  people = people.filter(x=>x.id!==id);
+  save(); render();
+}
+function markSent(id){ dismissed[id]=true; save(); render(); toast('Reminder marked sent ✓'); }
+
+/* ---------------- Gifts ---------------- */
+let currentGiftPersonId = null;
+function openGifts(personId){
+  currentGiftPersonId = personId;
+  const p = people.find(x=>x.id===personId);
+  document.getElementById('gmTitle').textContent = `Gift ideas for ${p.name}`;
+  document.getElementById('gmSub').textContent = p.hobbies.length ? 'Based on their hobbies:' : '';
+  const el = document.getElementById('giftContent');
+  if(!p.hobbies.length){
+    el.innerHTML = `<div class="empty">No hobbies listed yet.<br><br><button class="btn btn-primary btn-sm" onclick="document.getElementById('giftModal').classList.remove('open');openPersonModal(${p.id})">Add hobbies</button></div>`;
+  } else {
+    el.innerHTML = p.hobbies.map(h=>{
+      const c = CATALOG[h];
+      if(c){
+        const avail = c.items.filter(([n])=>!isPurchased(p.id,n));
+        const bought = c.items.filter(([n])=>isPurchased(p.id,n));
+        const rows = avail.map(([name,price])=>
+          `<div class="gift-item"><span>${esc(name)}</span><span class="gift-right"><span class="gift-price">${price}</span><a class="shop-link" target="_blank" rel="noopener" href="${shopUrl(name)}" onclick="trackClick([${p.id}],'${escJs(name)}','${h}')">Amazon ↗</a><button class="got-btn" onclick="markPurchased(${p.id},'${escJs(name)}','${h}')" title="Already bought — hide from suggestions">Got it 🎁</button></span></div>`).join('');
+        const emptyNote = avail.length ? '' :
+          `<div class="gift-item"><span>You've gifted every ${esc(c.label.toLowerCase())} idea in our catalog — try <a href="https://www.amazon.com/s?k=${encodeURIComponent(c.label+' gift')}" target="_blank" rel="noopener">Amazon</a> for more.</span></div>`;
+        const boughtRows = bought.map(([name])=>
+          `<div class="gift-item bought"><span class="gift-name">✅ ${esc(name)} — already gifted</span><span class="undo-link" onclick="unmarkPurchased(${p.id},'${escJs(name)}')">undo</span></div>`).join('');
+        return `<div class="hobby-group"><h4>${esc(c.label)}</h4>${rows}${emptyNote}${boughtRows}</div>`;
+      }
+      const q = encodeURIComponent(h+' gift');
+      return `<div class="hobby-group"><h4>${esc(h)}</h4><div class="gift-item"><span>Not in our catalog yet — try <a href="https://www.amazon.com/s?k=${q}" target="_blank">Amazon</a> or <a href="https://www.etsy.com/search?q=${q}" target="_blank">Etsy</a></span></div></div>`;
+    }).join('');
+  }
+  document.getElementById('giftModal').classList.add('open');
+}
+
+/* ---------------- Deal watch (simulated price engine) ----------------
+   Production: poll Amazon Product Advertising API / Keepa daily on a server,
+   compare against 90-day average price, push SMS/email when price drops.
+   Prototype: deterministic daily simulation so deals rotate each day.   */
+let dismissedDeals = {};
+try{ dismissedDeals = JSON.parse(localStorage.getItem('heydate_deals_seen')||'{}'); }catch(e){}
+
+function strHash(s){
+  let h = 5381;
+  for(let i=0;i<s.length;i++) h = ((h<<5)+h+s.charCodeAt(i))>>>0;
+  return h;
+}
+function basePrice(rangeStr, itemName){
+  const nums = (rangeStr.match(/\d+/g)||[30,60]).map(Number);
+  const lo = nums[0], hi = nums[1]||nums[0];
+  const p = lo + (strHash(itemName)%(Math.max(hi-lo,1)+1));
+  return Math.max(p,5) - 0.01; // e.g. 49.99
+}
+function todayKey(){ return new Date().toISOString().slice(0,10); }
+
+function todaysDeals(){
+  const hobbies = [...new Set(people.flatMap(p=>p.hobbies))].filter(h=>CATALOG[h]);
+  const day = todayKey();
+  const watched = [];
+  for(const h of hobbies){
+    const fans = people.filter(p=>p.hobbies.includes(h));
+    for(const [name,price] of CATALOG[h].items){
+      const buyers = fans.filter(f=>!isPurchased(f.id,name)); // skip items already gifted
+      if(!buyers.length) continue;
+      watched.push({h, fans:buyers, name, price, hash: strHash(day+'|'+h+'|'+name)});
+    }
+  }
+  // ~18% of watched items on sale daily; always at least 2 if anything is watched
+  let onSale = watched.filter(w=>w.hash % 100 < 18);
+  if(watched.length && onSale.length < Math.min(2,watched.length)){
+    onSale = [...watched].sort((a,b)=>(a.hash%100)-(b.hash%100)).slice(0,Math.min(2,watched.length));
+  }
+  const deals = onSale.map(w=>{
+    const pct = 15 + (w.hash % 26); // 15–40% off
+    const was = basePrice(w.price,w.name);
+    const now = Math.round(was*(100-pct))/100;
+    return {id:day+'|'+w.h+'|'+w.name, hobby:w.h, hobbyLabel:CATALOG[w.h].label,
+            item:w.name, was, now, pct, fans:w.fans};
+  });
+  return deals.sort((a,b)=>b.pct-a.pct);
+}
+
+function dealMessage(d){
+  const names = d.fans.map(f=>f.name).join(' & ');
+  return `💰 Deal alert from heydate: "${d.item}" is ${d.pct}% off — $${d.was.toFixed(2)} → $${d.now.toFixed(2)}. A great ${d.hobbyLabel.toLowerCase()} gift for ${names}!`;
+}
+
+function renderDeals(){
+  const el = document.getElementById('dealsList');
+  if(!el) return;
+  const deals = todaysDeals();
+  if(!deals.length){
+    const anyHobbies = people.some(p=>p.hobbies.length);
+    el.innerHTML = `<div class="card empty"><div class="big">🔍</div>${anyHobbies?'No price drops today — we check again tomorrow.':'Add hobbies to your people and we\'ll watch prices for matching gift ideas.'}</div>`;
+    return;
+  }
+  el.innerHTML = deals.map((d,i)=>{
+    const seen = dismissedDeals[d.id];
+    return `<div class="card deal-card" style="animation-delay:${Math.min(i*60,360)}ms;${seen?'opacity:.55':''}">
+      <div class="deal-head">
+        <div>
+          <div class="deal-item">${esc(d.item)}</div>
+          <div class="deal-for">${esc(d.hobbyLabel)} · gift idea for ${d.fans.map(f=>esc(f.name)).join(', ')}</div>
+        </div>
+        <span class="pct-off">−${d.pct}%</span>
+      </div>
+      <div class="deal-prices">
+        <span class="price-old">$${d.was.toFixed(2)}</span>
+        <span class="price-new">$${d.now.toFixed(2)}</span>
+      </div>
+      <div class="deal-notify">📲 ${esc(dealMessage(d))}</div>
+      <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <a class="shop-link" style="padding:8px 14px" target="_blank" rel="noopener" href="${shopUrl(d.item)}" onclick="trackClick([${d.fans.map(f=>f.id).join(',')}],'${escJs(d.item)}','${d.hobby}')">View on Amazon ↗</a>
+        ${seen?'<span class="pill gray">✅ notified</span>':`<button class="btn btn-primary btn-sm" onclick="notifyDeal('${d.id.replace(/'/g,"\\'")}')">Simulate notification</button>`}
+        ${d.fans.map(f=>`<button class="got-btn" onclick="markPurchased(${f.id},'${escJs(d.item)}','${d.hobby}')" title="Already bought — stop watching this for ${esc(f.name)}">Got it for ${esc(f.name)} 🎁</button>`).join('')}
+      </div>
+    </div>`;
+  }).join('');
+}
+function notifyDeal(id){
+  dismissedDeals[id] = true;
+  try{ localStorage.setItem('heydate_deals_seen',JSON.stringify(dismissedDeals)); }catch(e){}
+  render(); toast('Deal notification sent ✓');
+}
+
+function shopUrl(itemName){
+  // clean parentheticals & slashes for a better search query
+  const q = itemName.replace(/\([^)]*\)/g,' ').replace(/\//g,' ').replace(/\s+/g,' ').trim();
+  return 'https://www.amazon.com/s?k='+encodeURIComponent(q);
+}
+
+/* ---------------- Purchase tracking ----------------
+   Once a gift is marked as bought for a person, it disappears from their
+   suggestions and from deal watch. Production upgrade: Amazon Associates
+   subtag reports auto-confirm purchases ~1–2 days after the click. */
+let purchases = {};
+try{ purchases = JSON.parse(localStorage.getItem('heydate_purchases')||'{}'); }catch(e){}
+function pKey(personId,item){ return personId+'|'+item; }
+function isPurchased(personId,item){ return !!purchases[pKey(personId,item)]; }
+function savePurchases(){ try{ localStorage.setItem('heydate_purchases',JSON.stringify(purchases)); }catch(e){} }
+function markPurchased(personId,item,hobby){
+  purchases[pKey(personId,item)] = {item,hobby,date:todayKey()};
+  savePurchases(); render(); refreshGiftModal(); hideBuyPrompt();
+  const p = people.find(x=>x.id===personId);
+  toast(`Marked as gifted to ${p?p.name:'them'} — won't be suggested again ✓`);
+}
+function unmarkPurchased(personId,item){
+  delete purchases[pKey(personId,item)];
+  savePurchases(); render(); refreshGiftModal();
+  toast('Back on the ideas list');
+}
+function refreshGiftModal(){
+  if(currentGiftPersonId!==null && document.getElementById('giftModal').classList.contains('open'))
+    openGifts(currentGiftPersonId);
+}
+function escJs(s){ return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
+
+/* "Did you buy it?" prompt — fires when you come back after clicking a store link */
+let pendingBuy = null;
+function trackClick(personIds,item,hobby){ pendingBuy = {personIds,item,hobby,t:Date.now()}; }
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState!=='visible' || !pendingBuy) return;
+  const dt = Date.now()-pendingBuy.t;
+  if(dt>4000 && dt<30*60*1000) showBuyPrompt(pendingBuy);
+  pendingBuy = null;
+});
+function showBuyPrompt(pb){
+  const el = document.getElementById('buyPrompt');
+  const fans = pb.personIds.map(id=>people.find(x=>x.id===id)).filter(Boolean);
+  if(!fans.length) return;
+  el.innerHTML = `Did you buy <b>${esc(pb.item)}</b> for ${esc(fans.map(f=>f.name).join(' or '))}?
+    <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+      ${fans.map(f=>`<button class="btn btn-primary btn-sm" onclick="markPurchased(${f.id},'${escJs(pb.item)}','${pb.hobby}')">Yes${fans.length>1?' — for '+esc(f.name):''} ✓</button>`).join('')}
+      <button class="btn btn-ghost btn-sm" onclick="hideBuyPrompt()">Not yet</button>
+    </div>`;
+  el.classList.add('show');
+}
+function hideBuyPrompt(){ document.getElementById('buyPrompt').classList.remove('show'); }
+
+/* ---------------- Utils ---------------- */
+function esc(s){ return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+let toastTimer;
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.classList.remove('show'),2600);
+}
+document.querySelectorAll('.modal-bg').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open')}));
+
+render();
+</script>
+</body>
+</html>

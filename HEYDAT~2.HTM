@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>heydate — Never forget a birthday, anniversary, or perfect gift again</title>
+<meta name="description" content="heydate texts you 2 weeks before every special date — with gift ideas matched to their hobbies and deal alerts when those gifts go on sale.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f7f7fb; --ink:#16181d; --muted:#667085;
+    --accent:#f0512f; --grad:linear-gradient(135deg,#f0512f 0%,#e83e8c 100%);
+    --accent-soft:#fff0ec; --green:#12996b; --green-soft:#e7f8f1;
+    --line:#eaecf0;
+    --shadow:0 1px 3px rgba(16,24,40,.07),0 1px 2px rgba(16,24,40,.04);
+    --shadow-lg:0 20px 40px -14px rgba(16,24,40,.18);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{font-family:'Inter',system-ui,sans-serif;background:
+    radial-gradient(1000px 500px at 80% -150px,rgba(232,62,140,.09),transparent 60%),
+    radial-gradient(1000px 500px at 15% -150px,rgba(240,81,47,.10),transparent 60%),
+    var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;line-height:1.6}
+  .wrap{max-width:1020px;margin:0 auto;padding:0 22px}
+
+  header{padding:20px 0;display:flex;align-items:center;justify-content:space-between}
+  .logo{font-size:1.4rem;font-weight:900;letter-spacing:-.03em;
+    background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .logo span{color:var(--ink);-webkit-text-fill-color:var(--ink)}
+  .btn{display:inline-block;border:none;border-radius:14px;padding:14px 26px;font-weight:700;cursor:pointer;
+    font-size:1rem;font-family:inherit;text-decoration:none;transition:all .18s ease;text-align:center}
+  .btn:active{transform:scale(.97)}
+  .btn-primary{background:var(--grad);color:#fff;box-shadow:0 8px 20px -6px rgba(240,81,47,.5)}
+  .btn-primary:hover{filter:brightness(1.07);transform:translateY(-1px)}
+  .btn-sm{padding:9px 18px;font-size:.88rem;border-radius:11px}
+
+  @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+  .hero{text-align:center;padding:72px 0 30px;animation:fadeUp .5s ease both}
+  .eyebrow{display:inline-block;background:var(--accent-soft);color:var(--accent);font-weight:700;font-size:.82rem;
+    border-radius:999px;padding:6px 16px;margin-bottom:22px}
+  h1{font-size:clamp(2rem,5.4vw,3.4rem);font-weight:900;letter-spacing:-.035em;line-height:1.12;max-width:780px;margin:0 auto 18px}
+  h1 .grad{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .hero p{font-size:1.12rem;color:var(--muted);max-width:600px;margin:0 auto 32px}
+
+  .signup{display:flex;gap:10px;max-width:460px;margin:0 auto;animation:fadeUp .6s .1s ease both}
+  .signup input{flex:1;padding:14px 18px;border:1.5px solid var(--line);border-radius:14px;font-size:1rem;
+    font-family:inherit;background:#fff;box-shadow:var(--shadow)}
+  .signup input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 4px rgba(240,81,47,.12)}
+  .signup-note{font-size:.82rem;color:var(--muted);margin-top:12px}
+  .success{display:none;background:var(--green-soft);border:1px solid #b8e8d4;color:var(--green);font-weight:700;
+    border-radius:14px;padding:14px 20px;max-width:460px;margin:0 auto}
+  @media(max-width:520px){.signup{flex-direction:column}}
+
+  .phone-demo{max-width:380px;margin:54px auto 0;background:#fff;border:1px solid var(--line);border-radius:26px;
+    box-shadow:var(--shadow-lg);padding:22px;text-align:left;animation:fadeUp .7s .2s ease both}
+  .bubble{background:#f2f3f7;border-radius:16px 16px 16px 4px;padding:13px 16px;font-size:.92rem;margin-bottom:10px;line-height:1.5}
+  .bubble b{color:var(--accent)}
+  .bubble.deal{background:var(--green-soft)}
+  .phone-meta{font-size:.74rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:700;margin-bottom:10px}
+
+  section{padding:64px 0}
+  .sec-head{text-align:center;max-width:620px;margin:0 auto 44px}
+  h2{font-size:clamp(1.5rem,3.4vw,2.1rem);font-weight:900;letter-spacing:-.025em;margin-bottom:10px}
+  .sec-head p{color:var(--muted);font-size:1.02rem}
+
+  .feats{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px}
+  .feat{background:#fff;border:1px solid var(--line);border-radius:20px;padding:28px;box-shadow:var(--shadow);
+    transition:transform .2s ease,box-shadow .2s ease}
+  .feat:hover{transform:translateY(-3px);box-shadow:var(--shadow-lg)}
+  .feat .icon{font-size:1.9rem;margin-bottom:14px}
+  .feat h3{font-size:1.05rem;font-weight:800;margin-bottom:8px;letter-spacing:-.01em}
+  .feat p{color:var(--muted);font-size:.92rem}
+
+  .steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px;counter-reset:step}
+  .step{position:relative;background:#fff;border:1px solid var(--line);border-radius:20px;padding:30px 24px 24px;box-shadow:var(--shadow)}
+  .step::before{counter-increment:step;content:counter(step);position:absolute;top:-16px;left:22px;width:34px;height:34px;
+    border-radius:50%;background:var(--grad);color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;
+    box-shadow:0 6px 14px -4px rgba(240,81,47,.5)}
+  .step h3{font-size:1rem;font-weight:800;margin-bottom:6px}
+  .step p{color:var(--muted);font-size:.9rem}
+
+  .cta-band{background:var(--grad);border-radius:26px;padding:52px 30px;text-align:center;color:#fff;box-shadow:var(--shadow-lg)}
+  .cta-band h2{color:#fff}
+  .cta-band p{opacity:.92;max-width:480px;margin:0 auto 26px}
+  .cta-band .signup input{box-shadow:none}
+  .cta-band .btn-primary{background:#fff;color:var(--accent);box-shadow:0 8px 20px -6px rgba(0,0,0,.25)}
+
+  footer{padding:36px 0 50px;text-align:center;color:#98a2b3;font-size:.82rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="logo">hey<span>date</span> 🎁</div>
+    <a href="#signup" class="btn btn-primary btn-sm">Get early access</a>
+  </header>
+
+  <div class="hero">
+    <div class="eyebrow">🎉 Early access — free for founding members</div>
+    <h1>Never forget a birthday.<br>Never panic about <span class="grad">the gift.</span></h1>
+    <p>heydate texts you 2 weeks before every special date — with gift ideas matched to their hobbies, and alerts when those gifts go on sale.</p>
+    <form class="signup" id="signup" onsubmit="return joinWaitlist(event)">
+      <input type="email" id="waitEmail" placeholder="Enter your email" required>
+      <button class="btn btn-primary" type="submit">Join the waitlist</button>
+    </form>
+    <div class="success" id="successMsg">🎉 You're on the list! We'll be in touch soon.</div>
+    <div class="signup-note" id="signupNote">Free at launch · No spam, ever</div>
+
+    <div class="phone-demo">
+      <div class="phone-meta">📱 Text from heydate</div>
+      <div class="bubble">Heads up! <b>Mom's birthday</b> is in 14 days — Sun, June 28. She loves gardening 🌱 — we found 6 gift ideas for you.</div>
+      <div class="bubble deal">💰 Deal alert: the <b>Indoor Herb Growing Kit</b> on her list just dropped 30% — $52.99 → $37.09.</div>
+    </div>
+  </div>
+
+  <section>
+    <div class="sec-head">
+      <h2>Thoughtful gifting, on autopilot</h2>
+      <p>Set it up once. heydate handles the remembering, the ideas, and the timing.</p>
+    </div>
+    <div class="feats">
+      <div class="feat"><div class="icon">⏰</div><h3>2-week head start</h3><p>A text or email lands 14 days before every birthday, anniversary, and special occasion — enough time to actually do something about it.</p></div>
+      <div class="feat"><div class="icon">🎁</div><h3>Gifts matched to their hobbies</h3><p>Tell us they love golf, cooking, or gaming. We suggest specific, well-priced gifts — not generic junk.</p></div>
+      <div class="feat"><div class="icon">💰</div><h3>Deal alerts</h3><p>We watch prices on gifts that fit your people and ping you when one goes on sale. Buy early, save money.</p></div>
+      <div class="feat"><div class="icon">🛒</div><h3>Two taps to bought</h3><p>Every suggestion links straight to the product. From reminder to checkout in under a minute.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <h2>How it works</h2>
+    </div>
+    <div class="steps">
+      <div class="step"><h3>Add your people</h3><p>Name, special dates, and a few of their hobbies. Takes 30 seconds per person.</p></div>
+      <div class="step"><h3>We watch the calendar</h3><p>And the prices. You don't think about it at all.</p></div>
+      <div class="step"><h3>You get the text</h3><p>2 weeks out: the date, the gift ideas, the best current deals.</p></div>
+      <div class="step"><h3>You're the hero</h3><p>Perfect gift, on time, every time. They never know it was this easy.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="cta-band">
+      <h2>Be first in line</h2>
+      <p>Founding members get heydate free — and help shape what we build next.</p>
+      <form class="signup" onsubmit="return joinWaitlist(event,true)">
+        <input type="email" id="waitEmail2" placeholder="Enter your email" required>
+        <button class="btn btn-primary" type="submit">Join the waitlist</button>
+      </form>
+    </div>
+  </section>
+
+  <footer>© 2026 heydate · Never miss a moment that matters</footer>
+</div>
+
+<script>
+/* ============================================================
+   WAITLIST SETUP — two options:
+   1) Easiest: create a free form at formspree.io, then set
+      FORMSPREE_ENDPOINT to e.g. "https://formspree.io/f/abcd1234".
+      Emails will arrive in your Formspree dashboard/inbox.
+   2) Leave blank to demo: signups are stored in this browser
+      (localStorage) so you can test the flow.
+   ============================================================ */
+const FORMSPREE_ENDPOINT = ""; // <-- paste your Formspree URL here
+
+async function joinWaitlist(e, second){
+  e.preventDefault();
+  const input = document.getElementById(second?'waitEmail2':'waitEmail');
+  const email = input.value.trim();
+  if(!email) return false;
+  if(FORMSPREE_ENDPOINT){
+    try{
+      await fetch(FORMSPREE_ENDPOINT,{method:'POST',headers:{'Accept':'application/json','Content-Type':'application/json'},
+        body:JSON.stringify({email})});
+    }catch(err){}
+  } else {
+    try{
+      const list = JSON.parse(localStorage.getItem('heydate_waitlist')||'[]');
+      list.push({email, at:new Date().toISOString()});
+      localStorage.setItem('heydate_waitlist',JSON.stringify(list));
+    }catch(err){}
+  }
+  const form = input.closest('form');
+  form.style.display='none';
+  if(!second){
+    document.getElementById('successMsg').style.display='block';
+    document.getElementById('signupNote').textContent='Check your inbox for a confirmation soon.';
+  } else {
+    const ok = document.createElement('div');
+    ok.className='success'; ok.style.display='block';
+    ok.textContent="🎉 You're on the list!";
+    form.parentNode.appendChild(ok);
+  }
+  return false;
+}
+</script>
+</body>
+</html>
