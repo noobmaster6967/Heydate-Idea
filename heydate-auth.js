@@ -15,8 +15,8 @@
   "use strict";
 
   // ---------------------------------------------------------------- config
-  const SUPABASE_URL = "https://YOUR-PROJECT-REF.supabase.co";
-  const SUPABASE_ANON_KEY = "YOUR-PUBLIC-ANON-KEY";
+  const SUPABASE_URL = "https://sb_publishable_q_dxo6P8MbDBizcqQISBnw_pivaZe7L";
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFidXZpaXpja2Vqem9jcHVuYXNtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUyNzYzMzMsImV4cCI6MjEwMDg1MjMzM30.tkixYCA000jG4_kUeBkNSWCNMsPmljBnllxWVjN7XTY";
   const SUPABASE_JS = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js";
 
   const HD = (window.HD = window.HD || {});
