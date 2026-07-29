@@ -2,6 +2,11 @@
    heydate — real accounts (Supabase auth + cloud state)
    Replaces the hardcoded password gate.
 
+   INSTALL: add one line just before </body> in index.html —
+       <script src="heydate-auth.js"></script>
+   That's the only change index.html needs. This file finds the old
+   password gate and disables it, and wires itself into the app's state.
+
    Setup: paste your project URL + anon key below (see SETUP.md).
    The anon key is meant to be public — Row Level Security is what
    protects the data, and supabase-schema.sql sets that up.
@@ -20,9 +25,18 @@
   let profile = null;
   let saveTimer = null;
 
+  /* ------------------------------------------- retire the old password gate
+     index.html may still contain the shared-password overlay. Remove it so
+     the real sign-in screen is the only way in. Safe if it isn't there. */
+  function retireOldGate() {
+    const old = document.getElementById("hd-gate");
+    if (old) old.remove();
+    try { sessionStorage.removeItem("hd-auth"); } catch (e) { /* ignore */ }
+  }
+
   // ---------------------------------------------------------------- gate UI
   const gate = document.createElement("div");
-  gate.id = "hd-gate";
+  gate.id = "hd-auth-gate";
   gate.setAttribute("style", [
     "position:fixed", "inset:0", "z-index:99999",
     "background:linear-gradient(135deg,#f0512f,#e83e8c)",
@@ -88,6 +102,7 @@
     </div>`;
 
   function mountGate() {
+    retireOldGate();
     document.body.appendChild(gate);
     document.body.style.overflow = "hidden";
   }
@@ -294,11 +309,53 @@
     return merged;
   }
 
+  /* --------------------------------------------------- bridge into the app
+     index.html declares its state with `let people` / `let dismissed` /
+     `let purchases` / `let dismissedDeals` at the top level of a classic
+     inline <script>. Those bindings live in the global lexical scope, which
+     means indirect eval can read and write them — so we can swap the app's
+     state for the signed-in user's without editing index.html at all.
+
+     If you ran patch_index.py, it defined HD.hydrate/HD.snapshot properly
+     and we use those instead. */
+  const globalEval = window.eval; // member call => indirect => global scope
+
+  function appIsLoaded() {
+    return typeof window.render === "function" && typeof window.save === "function";
+  }
+
+  function makeBridge() {
+    if (typeof HD.hydrate === "function" && typeof HD.snapshot === "function") return;
+
+    HD.hydrate = function (s) {
+      window.__hdIncoming = s || {};
+      globalEval(
+        "people = window.__hdIncoming.people || [];" +
+        "dismissed = window.__hdIncoming.dismissed || {};" +
+        "purchases = window.__hdIncoming.purchases || {};" +
+        "dismissedDeals = window.__hdIncoming.deals_seen || {};" +
+        "render();"
+      );
+      delete window.__hdIncoming;
+    };
+
+    HD.snapshot = function () {
+      return globalEval(
+        "({people: people, dismissed: dismissed," +
+        " purchases: purchases, deals_seen: dismissedDeals})"
+      );
+    };
+  }
+
   function whenAppReady() {
-    if (HD.ready) return Promise.resolve();
+    if (HD.ready || appIsLoaded()) { makeBridge(); return Promise.resolve(); }
     return new Promise((resolve) => {
-      document.addEventListener("hd-app-ready", () => resolve(), { once: true });
-      const t = setInterval(() => { if (HD.ready) { clearInterval(t); resolve(); } }, 40);
+      const done = () => { makeBridge(); resolve(); };
+      document.addEventListener("hd-app-ready", done, { once: true });
+      const t = setInterval(() => {
+        if (HD.ready || appIsLoaded()) { clearInterval(t); done(); }
+      }, 40);
+      setTimeout(() => { clearInterval(t); done(); }, 8000); // don't hang forever
     });
   }
 
