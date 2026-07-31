@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>heydate — setup diagnostics</title>
+<style>
+  :root{
+    --bg:#f7f7fb; --card:#fff; --ink:#16181d; --muted:#667085; --line:#eaecf0;
+    --accent:#f0512f; --green:#12996b; --green-soft:#e7f8f1; --red:#c2410c;
+    --red-soft:#fff0ec; --amber:#b45309; --amber-soft:#fff4d6;
+    --grad:linear-gradient(135deg,#f0512f 0%,#e83e8c 100%);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:Inter,system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--ink);
+    padding:32px 18px 80px;line-height:1.5;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:760px;margin:0 auto}
+  h1{font-size:1.6rem;font-weight:900;letter-spacing:-.03em;margin-bottom:4px}
+  h1 span{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .sub{color:var(--muted);font-size:.92rem;margin-bottom:24px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;margin-bottom:14px;
+    box-shadow:0 1px 3px rgba(16,24,40,.07)}
+  label{font-size:.72rem;font-weight:800;color:var(--muted);text-transform:uppercase;
+    letter-spacing:.05em;display:block;margin:0 0 6px}
+  input{width:100%;padding:10px 13px;border:1.5px solid var(--line);border-radius:10px;
+    font:inherit;font-size:.9rem;background:#fcfcfd;margin-bottom:14px;font-family:ui-monospace,Menlo,monospace}
+  button{border:none;border-radius:11px;padding:11px 20px;font:inherit;font-weight:700;font-size:.9rem;
+    cursor:pointer;background:var(--grad);color:#fff;box-shadow:0 6px 16px -6px rgba(240,81,47,.5)}
+  button:disabled{opacity:.55;cursor:default}
+  button.ghost{background:#fff;border:1px solid var(--line);color:var(--ink);box-shadow:none}
+  .check{display:flex;gap:12px;padding:13px 0;border-bottom:1px dashed var(--line);align-items:flex-start}
+  .check:last-child{border-bottom:none}
+  .icon{font-size:1.05rem;line-height:1.45;width:20px;flex-shrink:0;text-align:center}
+  .body{flex:1;min-width:0}
+  .name{font-weight:700;font-size:.93rem}
+  .detail{font-size:.85rem;color:var(--muted);margin-top:3px;word-break:break-word}
+  .detail code{background:#f1f1f6;padding:1px 6px;border-radius:5px;font-size:.85em;
+    font-family:ui-monospace,Menlo,monospace}
+  .fix{font-size:.85rem;margin-top:8px;padding:10px 13px;border-radius:10px;
+    background:var(--amber-soft);border:1px solid #fde28a;color:#7c4a06;line-height:1.5}
+  .fix b{color:#5c3704}
+  pre{background:#16181d;color:#e6e6ea;padding:12px 14px;border-radius:10px;font-size:.78rem;
+    overflow-x:auto;margin-top:8px;font-family:ui-monospace,Menlo,monospace;line-height:1.45}
+  .verdict{padding:14px 18px;border-radius:14px;font-size:.93rem;margin-bottom:14px;font-weight:600}
+  .verdict.pass{background:var(--green-soft);border:1px solid #b8e8d4;color:var(--green)}
+  .verdict.fail{background:var(--red-soft);border:1px solid #ffd9cf;color:var(--red)}
+  .note{font-size:.8rem;color:var(--muted);margin-top:12px}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>hey<span>date</span> diagnostics</h1>
+  <p class="sub">Tests each layer of the Supabase setup in order and tells you which one is broken.</p>
+
+  <div class="card">
+    <label>Supabase Project URL</label>
+    <input id="url" placeholder="https://abcdefghijk.supabase.co" spellcheck="false">
+    <label>Publishable / anon key</label>
+    <input id="key" placeholder="sb_publishable_… or eyJ…" spellcheck="false">
+    <div class="row">
+      <button id="run">Run checks</button>
+      <button id="reload" class="ghost">Reload from heydate-auth.js</button>
+    </div>
+    <p class="note" id="autoload">Reading config from heydate-auth.js…</p>
+  </div>
+
+  <div id="verdict"></div>
+  <div class="card" id="results" style="display:none"></div>
+
+  <div class="card" id="signupCard" style="display:none">
+    <div class="name" style="margin-bottom:4px">Live signup test</div>
+    <p class="detail" style="margin-bottom:12px">
+      Creates a real throwaway account to surface the exact error your sign-up form hits.
+      Delete it afterwards in <b>Authentication → Users</b>.
+    </p>
+    <button id="signup" class="ghost">Run signup test</button>
+    <div id="signupOut"></div>
+  </div>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const results = $("results");
+
+function esc(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+function add(status, name, detail, fix){
+  const icon = status === "pass" ? "✅" : status === "warn" ? "⚠️" : "❌";
+  const el = document.createElement("div");
+  el.className = "check";
+  el.innerHTML = `<div class="icon">${icon}</div><div class="body">
+      <div class="name">${esc(name)}</div>
+      ${detail ? `<div class="detail">${detail}</div>` : ""}
+      ${fix ? `<div class="fix">${fix}</div>` : ""}
+    </div>`;
+  results.appendChild(el);
+  return status;
+}
+
+/* ---------- pull config straight out of the deployed heydate-auth.js ---------- */
+async function autoload(){
+  try{
+    const r = await fetch("heydate-auth.js?cachebust=" + Date.now());
+    if(!r.ok){ $("autoload").textContent = "heydate-auth.js returned " + r.status + " — enter values manually."; return; }
+    const src = await r.text();
+    const u = src.match(/SUPABASE_URL\s*=\s*["']([^"']*)["']/);
+    const k = src.match(/SUPABASE_ANON_KEY\s*=\s*["']([^"']*)["']/);
+    if(u) $("url").value = u[1];
+    if(k) $("key").value = k[1];
+    $("autoload").textContent = (u && k)
+      ? "Loaded the values currently deployed in heydate-auth.js."
+      : "Couldn't find both constants in heydate-auth.js — enter them manually.";
+  }catch(e){
+    $("autoload").textContent = "Couldn't read heydate-auth.js (" + e.message + ") — enter values manually.";
+  }
+}
+
+/* ---------------------------- the checks ---------------------------- */
+async function run(){
+  results.innerHTML = "";
+  results.style.display = "block";
+  $("verdict").innerHTML = "";
+  $("signupCard").style.display = "none";
+  $("run").disabled = true;
+
+  let url = $("url").value.trim();
+  const key = $("key").value.trim();
+  let fatal = false;
+
+  // 1 — URL shape
+  if(!url){
+    add("fail", "Project URL present", "The field is empty.",
+      "Dashboard → <b>Project Settings → Data API</b> → copy the <b>Project URL</b>.");
+    fatal = true;
+  } else if(/^https:\/\/sb_(publishable|secret)_/.test(url)){
+    add("fail", "Project URL shape", "You've put your <b>API key</b> in the URL field.",
+      "The URL looks like <code>https://abcdefghijk.supabase.co</code>. The <code>sb_publishable_…</code> value belongs in the key field.");
+    fatal = true;
+  } else if(!/^https:\/\/[a-z0-9-]+\.supabase\.(co|in)$/i.test(url.replace(/\/+$/, ""))){
+    add("fail", "Project URL shape", "<code>" + esc(url) + "</code> isn't a plain project URL.",
+      "It must be exactly <code>https://&lt;ref&gt;.supabase.co</code> — no path, no port. If you copied a database or pooler host (<code>db.…</code>), that's the wrong one.");
+    fatal = true;
+  } else if(/\/+$/.test(url)){
+    url = url.replace(/\/+$/, "");
+    add("warn", "Project URL shape", "There's a trailing slash, which produces <code>//auth/v1/signup</code> and returns <i>Invalid path specified in request URL</i>.",
+      "Remove the trailing slash in <b>heydate-auth.js</b>. Continuing with the trimmed URL.");
+  } else {
+    add("pass", "Project URL shape", "<code>" + esc(url) + "</code>");
+  }
+
+  // 2 — key shape
+  if(!key){
+    add("fail", "API key present", "The field is empty.", "Dashboard → <b>Project Settings → API Keys</b>.");
+    fatal = true;
+  } else if(/^sb_secret_/.test(key) || /service_role/.test(key)){
+    add("fail", "API key is safe to publish", "That's a <b>secret / service_role</b> key.",
+      "<b>Remove it from heydate-auth.js immediately and rotate it.</b> It bypasses row-level security, so anyone viewing your page source could read and modify every user's data. Use the publishable / anon key instead.");
+    fatal = true;
+  } else if(/^sb_publishable_/.test(key) || /^eyJ/.test(key)){
+    add("pass", "API key shape", key.slice(0, 22) + "…");
+  } else {
+    add("warn", "API key shape", "Doesn't look like a publishable (<code>sb_publishable_…</code>) or legacy anon (<code>eyJ…</code>) key.", "Double-check you copied the whole value.");
+  }
+
+  if(fatal){
+    $("verdict").innerHTML = '<div class="verdict fail">Fix the items above, then run again — the remaining checks need valid credentials.</div>';
+    $("run").disabled = false;
+    return;
+  }
+
+  const H = { apikey: key, Authorization: "Bearer " + key };
+  let ok = true;
+
+  // 3 — reachability
+  try{
+    const r = await fetch(url + "/auth/v1/health", { headers: H });
+    if(r.ok) add("pass", "Project reachable", "<code>/auth/v1/health</code> returned " + r.status + ".");
+    else { ok = false; add("fail", "Project reachable", "Health check returned " + r.status + ".",
+      "If this is 404, the project ref in the URL is wrong. If 503, the project may be paused — check for a <b>Restore</b> button on the dashboard."); }
+  }catch(e){
+    ok = false;
+    add("fail", "Project reachable", "Request failed: " + esc(e.message),
+      "Either the hostname is wrong, the project is paused, or a network filter is blocking <code>supabase.co</code>. Try again on a phone hotspot to rule out the network.");
+    $("verdict").innerHTML = '<div class="verdict fail">Can\'t reach the project — later checks skipped.</div>';
+    $("run").disabled = false;
+    return;
+  }
+
+  // 4 — key accepted
+  try{
+    const r = await fetch(url + "/rest/v1/", { headers: H });
+    if(r.status === 401 || r.status === 403){
+      ok = false;
+      add("fail", "API key accepted", "REST API returned " + r.status + ".",
+        "The key doesn't belong to this project, or it's truncated. Re-copy it from <b>Project Settings → API Keys</b>.");
+    } else {
+      add("pass", "API key accepted", "REST API returned " + r.status + ".");
+    }
+  }catch(e){
+    ok = false;
+    add("fail", "API key accepted", "Request failed: " + esc(e.message));
+  }
+
+  // 5 — tables exist
+  for(const t of ["profiles", "user_state"]){
+    try{
+      const r = await fetch(url + "/rest/v1/" + t + "?select=*&limit=1", { headers: H });
+      const txt = await r.text();
+      if(r.ok){
+        add("pass", "Table " + t, "Exists and is queryable. Returned <code>" + esc(txt.slice(0, 60)) + "</code> — an empty array is correct here, since row-level security hides other people's rows from an anonymous request.");
+      } else if(r.status === 404 || /does not exist|Could not find the table/i.test(txt)){
+        ok = false;
+        add("fail", "Table " + t, "Not found.",
+          "<b>supabase-schema.sql hasn't been run.</b> Dashboard → <b>SQL Editor → New query</b> → paste the whole file → <b>Run</b>.");
+      } else {
+        ok = false;
+        add("fail", "Table " + t, r.status + " — <code>" + esc(txt.slice(0, 160)) + "</code>");
+      }
+    }catch(e){
+      ok = false;
+      add("fail", "Table " + t, "Request failed: " + esc(e.message));
+    }
+  }
+
+  // 6 — redirect allowlist (the "Invalid path" culprit)
+  const origin = window.location.origin;
+  try{
+    const r = await fetch(url + "/auth/v1/settings", { headers: H });
+    const j = await r.json();
+    add(j && j.external ? "pass" : "warn", "Auth settings readable",
+      "Email signups " + (j && j.disable_signup ? "are <b>disabled</b>" : "are enabled") + ".",
+      j && j.disable_signup
+        ? "Turn signups back on: <b>Authentication → Sign In / Providers → Email</b>."
+        : null);
+  }catch(e){
+    add("warn", "Auth settings readable", "Couldn't read settings: " + esc(e.message));
+  }
+
+  if(/^https?:\/\/localhost|^https?:\/\/127\./.test(origin)){
+    add("warn", "Redirect allowlist", "You're testing from <code>" + esc(origin) + "</code>.",
+      "Make sure this exact origin is in <b>Authentication → URL Configuration → Redirect URLs</b>.");
+  } else {
+    add("warn", "Redirect allowlist", "This page is served from <code>" + esc(origin) + "</code>. That origin must be allowlisted or signup fails with <i>requested path is invalid</i>.",
+      "<b>Authentication → URL Configuration</b>: set <b>Site URL</b> to <code>" + esc(origin) + "</code> and add <code>" + esc(origin) + "/**</code> under <b>Redirect URLs</b>. The signup test below proves whether it's configured.");
+  }
+
+  $("verdict").innerHTML = ok
+    ? '<div class="verdict pass">Configuration looks correct. Run the signup test below to confirm end to end.</div>'
+    : '<div class="verdict fail">Found problems above — fix them top to bottom, then run again.</div>';
+
+  $("signupCard").style.display = "block";
+  $("run").disabled = false;
+}
+
+/* ------------------------- live signup probe ------------------------- */
+async function signupTest(){
+  const url = $("url").value.trim().replace(/\/+$/, "");
+  const key = $("key").value.trim();
+  const out = $("signupOut");
+  const email = "heydate-test-" + Date.now() + "@example.com";
+  out.innerHTML = '<p class="detail" style="margin-top:12px">Testing…</p>';
+
+  async function attempt(withRedirect){
+    const target = url + "/auth/v1/signup" +
+      (withRedirect ? "?redirect_to=" + encodeURIComponent(window.location.origin + "/") : "");
+    const r = await fetch(target, {
+      method: "POST",
+      headers: { apikey: key, Authorization: "Bearer " + key, "Content-Type": "application/json" },
+      body: JSON.stringify({ email: email, password: "diagnostic-Test-8891" })
+    });
+    return { status: r.status, body: await r.text() };
+  }
+
+  try{
+    const withR = await attempt(true);
+    const plain = await attempt(false);
+    let reading;
+
+    if(withR.status < 400){
+      reading = '<div class="verdict pass" style="margin:12px 0 0">Signup works, redirect included. Your form should work — delete the test user in <b>Authentication → Users</b>.</div>';
+    } else if(plain.status < 400){
+      reading = '<div class="verdict fail" style="margin:12px 0 0">Signup works <b>without</b> the redirect but fails <b>with</b> it. That is conclusively the redirect allowlist — add <code>' + esc(window.location.origin) + '/**</code> under <b>Authentication → URL Configuration → Redirect URLs</b>.</div>';
+    } else if(/already registered|already been registered/i.test(plain.body)){
+      reading = '<div class="verdict pass" style="margin:12px 0 0">Reached the auth server fine (it rejected a duplicate email). Auth is working.</div>';
+    } else {
+      reading = '<div class="verdict fail" style="margin:12px 0 0">Both attempts failed — read the response bodies below; Supabase states the reason precisely.</div>';
+    }
+
+    out.innerHTML = reading +
+      "<pre>with redirect  → " + withR.status + "\n" + esc(withR.body.slice(0, 400)) +
+      "\n\nwithout redirect → " + plain.status + "\n" + esc(plain.body.slice(0, 400)) + "</pre>";
+  }catch(e){
+    out.innerHTML = '<div class="verdict fail" style="margin:12px 0 0">Request never completed: ' + esc(e.message) + '</div>';
+  }
+}
+
+$("run").addEventListener("click", run);
+$("reload").addEventListener("click", autoload);
+$("signup").addEventListener("click", signupTest);
+autoload();
+</script>
+</body>
+</html>
